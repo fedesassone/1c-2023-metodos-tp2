@@ -20,5 +20,5 @@ sh compile
 ## Correr el programa
 
 ```
-./tp (nombre_archivo_test) (niter) (eps)
+./main (nombre_archivo_test) (niter) (eps)
 ```
