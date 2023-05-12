@@ -25,11 +25,11 @@ sh compile
 
 ## Ejemplo:
 
-### Entrada:
+#### Entrada:
 ```
 ./main prueba_txt 100000 0.000001
 ```
-### Salida:
+#### Salida:
 ```
 tests/prueba.txt_autovalores.out
 tests/prueba.txt_autovectores.out
