@@ -8,6 +8,8 @@
 #ifndef EIGEN_CXX11_TENSOR_TENSOR_BLOCK_H
 #define EIGEN_CXX11_TENSOR_TENSOR_BLOCK_H
 
+#include "./InternalHeaderCheck.h"
+
 namespace Eigen {
 namespace internal {
 
@@ -242,7 +244,7 @@ class TensorBlockDescriptor {
     const DestinationBufferKind& kind() const { return m_kind; }
 
    private:
-    friend class TensorBlockDescriptor;
+    friend class TensorBlockDescriptor<NumDims, IndexType>;
 
     DestinationBuffer() : m_data(NULL), m_data_type_size(0), m_kind(kEmpty) {}
 
@@ -706,7 +708,7 @@ class TensorMaterializedBlock {
     }
 
    private:
-    friend class TensorMaterializedBlock;
+    friend class TensorMaterializedBlock<Scalar, NumDims, Layout, IndexType>;
 
     Storage(Scalar* data, const Dimensions& dimensions,
             const Dimensions& strides, bool materialized_in_output,
@@ -833,14 +835,14 @@ class TensorMaterializedBlock {
 
 template <typename UnaryOp, typename ArgTensorBlock>
 class TensorCwiseUnaryBlock {
-  static const bool NoArgBlockAccess =
+  static constexpr bool NoArgBlockAccess =
       internal::is_void<typename ArgTensorBlock::XprType>::value;
 
  public:
-  typedef typename conditional<
+  typedef std::conditional_t<
       NoArgBlockAccess, void,
-      TensorCwiseUnaryOp<UnaryOp, const typename ArgTensorBlock::XprType> >::
-      type XprType;
+      TensorCwiseUnaryOp<UnaryOp, const typename ArgTensorBlock::XprType> >
+      XprType;
 
   typedef typename XprScalar<XprType>::type Scalar;
 
@@ -864,15 +866,15 @@ class TensorCwiseUnaryBlock {
 
 template <typename BinaryOp, typename LhsTensorBlock, typename RhsTensorBlock>
 class TensorCwiseBinaryBlock {
-  static const bool NoArgBlockAccess =
+  static constexpr bool NoArgBlockAccess =
       internal::is_void<typename LhsTensorBlock::XprType>::value ||
       internal::is_void<typename RhsTensorBlock::XprType>::value;
 
  public:
-  typedef typename conditional<
+  typedef std::conditional_t<
       NoArgBlockAccess, void,
       TensorCwiseBinaryOp<BinaryOp, const typename LhsTensorBlock::XprType,
-                          const typename RhsTensorBlock::XprType> >::type
+                          const typename RhsTensorBlock::XprType> >
       XprType;
 
   typedef typename XprScalar<XprType>::type Scalar;
@@ -911,12 +913,12 @@ class TensorCwiseBinaryBlock {
 template <typename BlockFactory, typename ArgTensorBlock>
 class TensorUnaryExprBlock {
   typedef typename ArgTensorBlock::XprType ArgXprType;
-  static const bool NoArgBlockAccess = internal::is_void<ArgXprType>::value;
+  static constexpr bool NoArgBlockAccess = internal::is_void<ArgXprType>::value;
 
  public:
-  typedef typename conditional<
+  typedef std::conditional_t<
       NoArgBlockAccess, void,
-      typename BlockFactory::template XprType<ArgXprType>::type>::type XprType;
+      typename BlockFactory::template XprType<ArgXprType>::type> XprType;
 
   typedef typename XprScalar<XprType>::type Scalar;
 
@@ -945,15 +947,15 @@ class TensorTernaryExprBlock {
   typedef typename Arg2TensorBlock::XprType Arg2XprType;
   typedef typename Arg3TensorBlock::XprType Arg3XprType;
 
-  static const bool NoArgBlockAccess = internal::is_void<Arg1XprType>::value ||
-                                       internal::is_void<Arg2XprType>::value ||
-                                       internal::is_void<Arg3XprType>::value;
+  static constexpr bool NoArgBlockAccess = internal::is_void<Arg1XprType>::value ||
+                                           internal::is_void<Arg2XprType>::value ||
+                                           internal::is_void<Arg3XprType>::value;
 
  public:
-  typedef typename conditional<
+  typedef std::conditional_t<
       NoArgBlockAccess, void,
       typename BlockFactory::template XprType<Arg1XprType, Arg2XprType,
-                                              Arg3XprType>::type>::type XprType;
+                                              Arg3XprType>::type> XprType;
 
   typedef typename XprScalar<XprType>::type Scalar;
 
@@ -992,9 +994,12 @@ class TensorTernaryExprBlock {
 template <typename Scalar, typename IndexType>
 class StridedLinearBufferCopy {
   typedef typename packet_traits<Scalar>::type Packet;
+  typedef typename unpacket_traits<Packet>::half HalfPacket;
   enum {
     Vectorizable = packet_traits<Scalar>::Vectorizable,
-    PacketSize = packet_traits<Scalar>::size
+    PacketSize = packet_traits<Scalar>::size,
+    HasHalfPacket = unpacket_traits<HalfPacket>::size < PacketSize,
+    HalfPacketSize = unpacket_traits<HalfPacket>::size,
   };
 
  public:
@@ -1068,6 +1073,14 @@ class StridedLinearBufferCopy {
         Packet p = ploadu<Packet>(src + i);
         pstoreu<Scalar, Packet>(dst + i, p);
       }
+      if (HasHalfPacket) {
+        const IndexType vectorized_half_size = count - HalfPacketSize;
+        if (i <= vectorized_half_size) {
+          HalfPacket p = ploadu<HalfPacket>(src + i);
+          pstoreu<Scalar, HalfPacket>(dst + i, p);
+          i += HalfPacketSize;
+        }
+      }
       for (; i < count; ++i) {
         dst[i] = src[i];
       }
@@ -1079,6 +1092,14 @@ class StridedLinearBufferCopy {
         Packet p = ploadu<Packet>(src + i);
         pscatter<Scalar, Packet>(dst + i * dst_stride, p, dst_stride);
       }
+      if (HasHalfPacket) {
+        const IndexType vectorized_half_size = count - HalfPacketSize;
+        if (i <= vectorized_half_size) {
+          HalfPacket p = ploadu<HalfPacket>(src + i);
+          pscatter<Scalar, HalfPacket>(dst + i * dst_stride, p, dst_stride);
+          i += HalfPacketSize;
+        }
+      }
       for (; i < count; ++i) {
         dst[i * dst_stride] = src[i];
       }
@@ -1087,7 +1108,8 @@ class StridedLinearBufferCopy {
       // Fill `dst` with value at `*src`.
       eigen_assert(src_stride == 0 && dst_stride == 1);
       const IndexType unrolled_size = count - 4 * PacketSize;
-      Packet p = pload1<Packet>(src);
+      Scalar s = *src;
+      Packet p = pset1<Packet>(s);
       for (; i <= unrolled_size; i += 4 * PacketSize) {
         for (int j = 0; j < 4; ++j) {
           pstoreu<Scalar, Packet>(dst + i + j * PacketSize, p);
@@ -1096,19 +1118,36 @@ class StridedLinearBufferCopy {
       for (; i <= vectorized_size; i += PacketSize) {
         pstoreu<Scalar, Packet>(dst + i, p);
       }
+      if (HasHalfPacket) {
+        const IndexType vectorized_half_size = count - HalfPacketSize;
+        if (i <= vectorized_half_size) {
+          HalfPacket hp = pset1<HalfPacket>(s);
+          pstoreu<Scalar, HalfPacket>(dst + i, hp);
+          i += HalfPacketSize;
+        }
+      }
       for (; i < count; ++i) {
-        dst[i] = *src;
+        dst[i] = s;
       }
       // ******************************************************************** //
     } else if (kind == StridedLinearBufferCopy::Kind::FillScatter) {
       // Scatter `*src` into `dst`.
       eigen_assert(src_stride == 0 && dst_stride != 1);
-      Packet p = pload1<Packet>(src);
+      Scalar s = *src;
+      Packet p = pset1<Packet>(s);
       for (; i <= vectorized_size; i += PacketSize) {
         pscatter<Scalar, Packet>(dst + i * dst_stride, p, dst_stride);
       }
+      if (HasHalfPacket) {
+        const IndexType vectorized_half_size = count - HalfPacketSize;
+        if (i <= vectorized_half_size) {
+          HalfPacket hp = pset1<HalfPacket>(s);
+          pscatter<Scalar, HalfPacket>(dst + i * dst_stride, hp, dst_stride);
+          i += HalfPacketSize;
+        }
+      }
       for (; i < count; ++i) {
-        dst[i * dst_stride] = *src;
+        dst[i * dst_stride] = s;
       }
       // ******************************************************************** //
     } else if (kind == StridedLinearBufferCopy::Kind::Gather) {
@@ -1117,6 +1156,15 @@ class StridedLinearBufferCopy {
       for (; i <= vectorized_size; i += PacketSize) {
         Packet p = pgather<Scalar, Packet>(src + i * src_stride, src_stride);
         pstoreu<Scalar, Packet>(dst + i, p);
+      }
+      if (HasHalfPacket) {
+        const IndexType vectorized_half_size = count - HalfPacketSize;
+        if (i <= vectorized_half_size) {
+          HalfPacket p =
+              pgather<Scalar, HalfPacket>(src + i * src_stride, src_stride);
+          pstoreu<Scalar, HalfPacket>(dst + i, p);
+          i += HalfPacketSize;
+        }
       }
       for (; i < count; ++i) {
         dst[i] = src[i * src_stride];
@@ -1141,7 +1189,7 @@ class StridedLinearBufferCopy {
 
 template <typename Scalar, typename IndexType, int NumDims, int Layout>
 class TensorBlockIO {
-  static const bool IsColMajor = (Layout == ColMajor);
+  static constexpr bool IsColMajor = (Layout == ColMajor);
 
   typedef StridedLinearBufferCopy<Scalar, IndexType> LinCopy;
 

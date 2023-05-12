@@ -27,35 +27,82 @@ using Eigen::TensorMap;
 
 // Functions used to compare the TensorMap implementation on the device with
 // the equivalent on the host
-namespace cl {
-namespace sycl {
-template <typename T> T abs(T x) { return cl::sycl::fabs(x); }
+namespace SYCL {
+template <typename T> T abs(T x) { 
+  return cl::sycl::abs(x);
+}
+
+template <> float abs(float x) { 
+  return cl::sycl::fabs(x);
+}
+
+template <> double abs(double x) { 
+  return cl::sycl::fabs(x);
+}
+
 template <typename T> T square(T x) { return x * x; }
 template <typename T> T cube(T x) { return x * x * x; }
 template <typename T> T inverse(T x) { return T(1) / x; }
-template <typename T> T cwiseMax(T x, T y) { return cl::sycl::max(x, y); }
-template <typename T> T cwiseMin(T x, T y) { return cl::sycl::min(x, y); }
+template <typename T> T cwiseMax(T x, T y) { 
+return cl::sycl::max(x, y);
+}
+template <typename T> T cwiseMin(T x, T y) { 
+  return cl::sycl::min(x, y); 
 }
 }
 
-struct EqualAssignement {
+
+#define DECLARE_UNARY_STRUCT_NON_SYCL(FUNC)                        \
+  struct op_##FUNC {                                               \
+    template <typename T>                                          \
+    auto operator()(const T& x)  {                                 \
+      return SYCL::FUNC(x);                                        \
+    }                                                              \
+    template <typename T>                                          \
+    auto operator()(const TensorMap<T>& x) {                       \
+      return x.FUNC();                                             \
+    }                                                              \
+  };
+
+DECLARE_UNARY_STRUCT_NON_SYCL(abs)
+DECLARE_UNARY_STRUCT_NON_SYCL(square)
+DECLARE_UNARY_STRUCT_NON_SYCL(cube)
+DECLARE_UNARY_STRUCT_NON_SYCL(inverse)
+
+#define DECLARE_BINARY_STRUCT_NON_SYCL(FUNC)                                                 \
+  struct op_##FUNC {                                                                         \
+    template <typename T1, typename T2>                                                      \
+    auto operator()(const T1& x, const T2& y){                                               \
+      return SYCL::FUNC(x, y);                                                               \
+    }                                                                                        \
+    template <typename T1, typename T2>                                                      \
+    auto operator()(const TensorMap<T1>& x, const TensorMap<T2>& y) {                        \
+      return x.FUNC(y);                                                                      \
+    }                                                                                        \
+  };
+
+DECLARE_BINARY_STRUCT_NON_SYCL(cwiseMax)
+DECLARE_BINARY_STRUCT_NON_SYCL(cwiseMin)
+
+
+struct EqualAssignment {
   template <typename Lhs, typename Rhs>
   void operator()(Lhs& lhs, const Rhs& rhs) { lhs = rhs; }
 };
 
-struct PlusEqualAssignement {
+struct PlusEqualAssignment {
   template <typename Lhs, typename Rhs>
   void operator()(Lhs& lhs, const Rhs& rhs) { lhs += rhs; }
 };
 
 template <typename DataType, int DataLayout,
-          typename Assignement, typename Operator>
+          typename Assignment, typename Operator>
 void test_unary_builtins_for_scalar(const Eigen::SyclDevice& sycl_device,
                                     const array<int64_t, 3>& tensor_range) {
   Operator op;
-  Assignement asgn;
+  Assignment asgn;
   {
-    /* Assignement(out, Operator(in)) */
+    /* Assignment(out, Operator(in)) */
     Tensor<DataType, 3, DataLayout, int64_t> in(tensor_range);
     Tensor<DataType, 3, DataLayout, int64_t> out(tensor_range);
     in = in.random() + DataType(0.01);
@@ -84,9 +131,10 @@ void test_unary_builtins_for_scalar(const Eigen::SyclDevice& sycl_device,
     sycl_device.deallocate(gpu_data_out);
   }
   {
-    /* Assignement(out, Operator(out)) */
+    /* Assignment(out, Operator(out)) */
     Tensor<DataType, 3, DataLayout, int64_t> out(tensor_range);
-    out = out.random() + DataType(0.01);
+    // Offset with 1 to avoid tiny output (< 1e-6) as they can easily fail.
+    out = out.random() + DataType(1);
     Tensor<DataType, 3, DataLayout, int64_t> reference(out);
     DataType *gpu_data_out = static_cast<DataType *>(
         sycl_device.allocate(out.size() * sizeof(DataType)));
@@ -118,12 +166,9 @@ void test_unary_builtins_for_scalar(const Eigen::SyclDevice& sycl_device,
     }                                                              \
   };
 
-DECLARE_UNARY_STRUCT(abs)
+
 DECLARE_UNARY_STRUCT(sqrt)
 DECLARE_UNARY_STRUCT(rsqrt)
-DECLARE_UNARY_STRUCT(square)
-DECLARE_UNARY_STRUCT(cube)
-DECLARE_UNARY_STRUCT(inverse)
 DECLARE_UNARY_STRUCT(tanh)
 DECLARE_UNARY_STRUCT(exp)
 DECLARE_UNARY_STRUCT(expm1)
@@ -137,11 +182,11 @@ DECLARE_UNARY_STRUCT(isnan)
 DECLARE_UNARY_STRUCT(isfinite)
 DECLARE_UNARY_STRUCT(isinf)
 
-template <typename DataType, int DataLayout, typename Assignement>
+template <typename DataType, int DataLayout, typename Assignment>
 void test_unary_builtins_for_assignement(const Eigen::SyclDevice& sycl_device,
                                          const array<int64_t, 3>& tensor_range) {
 #define RUN_UNARY_TEST(FUNC) \
-  test_unary_builtins_for_scalar<DataType, DataLayout, Assignement, \
+  test_unary_builtins_for_scalar<DataType, DataLayout, Assignment, \
                                  op_##FUNC>(sycl_device, tensor_range)
   RUN_UNARY_TEST(abs);
   RUN_UNARY_TEST(sqrt);
@@ -190,9 +235,9 @@ template <typename DataType, int DataLayout>
 void test_unary_builtins(const Eigen::SyclDevice& sycl_device,
                          const array<int64_t, 3>& tensor_range) {
   test_unary_builtins_for_assignement<DataType, DataLayout,
-                                      PlusEqualAssignement>(sycl_device, tensor_range);
+                                      PlusEqualAssignment>(sycl_device, tensor_range);
   test_unary_builtins_for_assignement<DataType, DataLayout,
-                                      EqualAssignement>(sycl_device, tensor_range);
+                                      EqualAssignment>(sycl_device, tensor_range);
   test_unary_builtins_return_bool<DataType, DataLayout,
                                   op_isnan>(sycl_device, tensor_range);
   test_unary_builtins_return_bool<DataType, DataLayout,
@@ -287,8 +332,6 @@ void test_binary_builtins_fixed_arg2(const Eigen::SyclDevice& sycl_device,
     }                                                                                        \
   };
 
-DECLARE_BINARY_STRUCT(cwiseMax)
-DECLARE_BINARY_STRUCT(cwiseMin)
 
 #define DECLARE_BINARY_STRUCT_OP(NAME, OPERATOR)                          \
   struct op_##NAME {                                                      \

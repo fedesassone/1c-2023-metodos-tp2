@@ -18,8 +18,7 @@ int encuentroDimensionMatrizEntrada(ifstream &);
 // 2 - iter: cantidad de iteraciones.-
 // 3 - eps: tolerancia para la convergencia.-
 
-// Ejemplo para correr :
-// ./tp ../tests/karateclub_matriz.txt 5 0.00001
+
 int main(int argc, char **argv)
 {
 	if (argc != 4)
@@ -36,7 +35,7 @@ int main(int argc, char **argv)
 	ofstream archivoAutovalores;
 	archivoAutovalores.setf(ios::fixed, ios::floatfield);
 	archivoAutovalores.precision(10);
-	string nombreCarpetaAutovalores = "./";
+	string nombreCarpetaAutovalores = "../tests/";
 	nombreCarpetaAutovalores += argv[1];
 	nombreCarpetaAutovalores += "_autovalores.out";
 
@@ -44,7 +43,7 @@ int main(int argc, char **argv)
 	ofstream archivoAutovectores;
 	archivoAutovectores.setf(ios::fixed, ios::floatfield);
 	archivoAutovectores.precision(10);
-	string nombreCarpetaAutovectores = "./";
+	string nombreCarpetaAutovectores = "../tests/";
 	nombreCarpetaAutovectores += argv[1];
 	nombreCarpetaAutovectores += "_autovectores.out";
 
