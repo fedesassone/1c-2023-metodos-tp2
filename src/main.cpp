@@ -13,10 +13,10 @@ MatrixXd generarMatrizDesdeArchivo(ifstream &, int);
 int encuentroDimensionMatrizEntrada(ifstream &);
 
 // argumentos
-// 0 - main.-
-// 1 - Matriz: archivo con la matriz de entrada.-
-// 2 - iter: cantidad de iteraciones.-
-// 3 - eps: tolerancia para la convergencia.-
+// 0 - main
+// 1 - Matriz: archivo con la matriz de entrada
+// 2 - iter: cantidad de iteraciones
+// 3 - eps: tolerancia para la convergencia
 
 
 int main(int argc, char **argv)
@@ -29,7 +29,8 @@ int main(int argc, char **argv)
 
 	cout << "Corriendo el programa..." << endl;
 
-	ifstream archivoDeEntrada(argv[1]);
+	string tests_dir = "../tests/";
+	ifstream archivoDeEntrada(tests_dir += argv[1]);
 
 	// Preparo archivo de salida 1:
 	ofstream archivoAutovalores;
@@ -52,26 +53,26 @@ int main(int argc, char **argv)
 
 	int dim = encuentroDimensionMatrizEntrada(archivoDeEntrada);
 
-	// Generamos (copiamos) la matriz que dada por archivo.-
+	// Generamos (copiamos) la matriz que dada por archivo
 	MatrixXd X = generarMatrizDesdeArchivo(archivoDeEntrada, dim);
 
-	// Copio la matriz original para que no sufra cambios (mat_copy = mat).-
+	// Copio la matriz original para que no sufra cambios (mat_copy = mat)
 	MatrixXd mat_copy = X;
 
-	//  CORREMOS EL METODO DE LA POTENCIA CON DEFLACION.-
+	//  CORREMOS EL METODO DE LA POTENCIA CON DEFLACION
 	pair<VectorXd, MatrixXd> res = eigen(mat_copy, niter, eps);
 
-	// Abro los archivos de salida.-
+	// Abro los archivos de salida
 	archivoAutovectores.open(nombreCarpetaAutovectores);
 	archivoAutovalores.open(nombreCarpetaAutovalores);
 
-	// Cargo el archivo con los autovalores.-
+	// Cargo el archivo con los autovalores
 	for (int i = 0; i < dim; i++)
 	{
 		archivoAutovalores << res.first[i] << endl;
 	}
 
-	// Cargo el archivo con los autovectores.-
+	// Cargo el archivo con los autovectores
 	for (int i = 0; i < dim; i++)
 	{
 		for (int j = 0; j < dim; j++)
@@ -81,7 +82,7 @@ int main(int argc, char **argv)
 		archivoAutovectores << endl;
 	}
 
-	// Cierro los archivos de salida.-
+	// Cierro los archivos de salida
 	archivoAutovalores.close();
 	archivoAutovectores.close();
 
