@@ -31,7 +31,6 @@ sh compile
 ```
 ### Salida:
 ```
-prueba.txt_autovalores.out
-prueba.txt_autovectores.out
-
+tests/prueba.txt_autovalores.out
+tests/prueba.txt_autovectores.out
 ```
