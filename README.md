@@ -22,3 +22,8 @@ sh compile
 ```
 ./main (nombre_archivo_test) (niter) (eps)
 ```
+
+## Ejemplo:
+```
+./main prueba_txt 100000 0.000001
+```
