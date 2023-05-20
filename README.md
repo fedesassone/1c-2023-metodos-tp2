@@ -3,6 +3,13 @@ Repo para el tp2 de métodos
 
 ## Instrucciones
 
+### Crear el entorno e instalar dependencias.
+
+0. Install conda: https://docs.conda.io/en/latest/miniconda.html
+1. conda create -n metodos-tp2-env python=3.7
+2. conda activate metodos-tp2-env
+3. pip install -r requirements.txt
+
 ## Compilación
 
 1. Ir al src 
