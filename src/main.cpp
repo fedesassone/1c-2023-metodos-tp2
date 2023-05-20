@@ -53,7 +53,7 @@ int main(int argc, char **argv)
 
 	int dim = encuentroDimensionMatrizEntrada(archivoDeEntrada);
 
-	// Generamos (copiamos) la matriz que dada por archivo
+	// Generamos (copiamos) la matriz dada por archivo
 	MatrixXd X = generarMatrizDesdeArchivo(archivoDeEntrada, dim);
 
 	// Copio la matriz original para que no sufra cambios (mat_copy = mat)
