@@ -48,6 +48,7 @@ pair<VectorXd, MatrixXd> eigen(MatrixXd A, int niter, double eps)
         eigenvalues[i] = temp.first;
         AV = agregarVecAColumna(AV, temp.second, i);
         A -= temp.first * (temp.second * temp.second.transpose());
+        cout << i << endl;
     }
     pair<VectorXd, MatrixXd> res = make_pair(eigenvalues, AV);
     return res;
