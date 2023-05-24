@@ -1,0 +1,85 @@
+======================
+autovalor: 400
+frene en iteracion: 656
+valor = 0.00465247
+======================
+autovalor: 401
+frene en iteracion: 481
+valor = 0.00456743
+======================
+autovalor: 402
+frene en iteracion: 645
+valor = 0.00440322
+======================
+autovalor: 403
+frene en iteracion: 294
+valor = 0.00429217
+======================
+autovalor: 404
+frene en iteracion: 526
+valor = 0.00411041
+======================
+autovalor: 405
+frene en iteracion: 300
+valor = 0.00395553
+======================
+autovalor: 406
+frene en iteracion: 183
+valor = 0.00372118
+======================
+autovalor: 407
+frene en iteracion: 417
+valor = 0.00343423
+======================
+autovalor: 408
+frene en iteracion: 8
+valor = 0.00332608
+======================
+autovalor: 409
+frene en iteracion: 10000
+valor = 0.000265827
+======================
+autovalor: 410
+frene en iteracion: 10000
+valor = -0.000269867
+======================
+autovalor: 411
+frene en iteracion: 8572
+valor = 0.000267491
+======================
+autovalor: 412
+frene en iteracion: 10000
+valor = -0.00026707
+======================
+autovalor: 413
+frene en iteracion: 10000
+valor = -0.000266373
+======================
+autovalor: 414
+frene en iteracion: 10000
+valor = 0.000265255
+======================
+autovalor: 415
+frene en iteracion: 10000
+valor = -0.000264893
+======================
+autovalor: 416
+frene en iteracion: 10000
+valor = -0.000263668
+======================
+autovalor: 417
+frene en iteracion: 4333
+valor = 0.000263117
+======================
+autovalor: 418
+frene en iteracion: 10000
+valor = 0.000262254
+======================
+autovalor: 419
+frene en iteracion: 10000
+valor = -0.000262038
+======================
+autovalor: 420
+frene en iteracion: 10000
+valor = -0.000225187
+======================

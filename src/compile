@@ -1,1 +1,1 @@
-g++ -I ./eigen main.cpp -o main
+g++ -I ./eigen -O3 main.cpp -o main

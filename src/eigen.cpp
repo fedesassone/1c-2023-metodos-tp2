@@ -20,23 +20,21 @@ pair<VectorXd, MatrixXd> eigen(MatrixXd A, int niter, double eps)
     for (int i = 0; i < n; i++)
     {
         cout << "autovalor: " << i << endl;
-        cout << "arranca powerIteration" << endl;
 
         temp = powerIteration(A, niter, eps, n);
-
-        cout << "termino powerIteration " << endl;
 
         eigenvalues[i] = temp.first;
         AV = agregarVecAColumna(AV, temp.second, i, n);
         A -= temp.first * (temp.second * temp.second.transpose());
 
-        cout << "termino autovalor " << i << endl;
+        cout << "valor = " << temp.first << endl;
         cout << "======================" << endl;
 
     }
     pair<VectorXd, MatrixXd> res = make_pair(eigenvalues, AV);
     return res;
 }
+
 
 pair<double, VectorXd> powerIteration(MatrixXd A, int niter, double eps, int n)
 {
@@ -52,11 +50,15 @@ pair<double, VectorXd> powerIteration(MatrixXd A, int niter, double eps, int n)
         b = (A * b).normalized();
 
         double cosAngle = b.dot(old);
-        if (((1 - eps) < cosAngle) && cosAngle <= 1)
+        if ((1 - eps) < cosAngle && cosAngle <= 1)
         {
             stop = true;
+            cout << "frene en iteracion: " << i << endl;
         }
         i++;
+    }
+    if (stop == false){
+        cout << "frene en iteracion: " << niter << endl;
     }
     double eigenvalue = b.dot(A * b);
     return make_pair(eigenvalue, b);
