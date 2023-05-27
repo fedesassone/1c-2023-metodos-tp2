@@ -21,9 +21,9 @@ int encuentroDimensionMatrizEntrada(ifstream &);
 
 int main(int argc, char **argv)
 {
-	if (argc != 4)
+	if (argc < 4 || argc > 5)
 	{
-		cout << "Error, Faltan Argumentos." << endl;
+		cout << "Uso './main {nombre_archivo_test} {niter} {eps} {cant_autovalores (opcional)}." << endl;
 		return 1;
 	}
 
@@ -52,6 +52,11 @@ int main(int argc, char **argv)
 	double eps = std::stod(argv[3]);
 
 	int dim = encuentroDimensionMatrizEntrada(archivoDeEntrada);
+	int cantidad = dim;
+
+	if (argc == 5){
+		cantidad = std::stoi(argv[4]);
+	}
 
 	// Generamos (copiamos) la matriz dada por archivo
 	MatrixXd X = generarMatrizDesdeArchivo(archivoDeEntrada, dim);
@@ -60,22 +65,24 @@ int main(int argc, char **argv)
 	MatrixXd mat_copy = X;
 
 	//  CORREMOS EL METODO DE LA POTENCIA CON DEFLACION
-	pair<VectorXd, MatrixXd> res = eigen(mat_copy, niter, eps);
+	pair<VectorXd, MatrixXd> res = eigen(mat_copy, niter, eps, cantidad);
 
 	// Abro los archivos de salida
 	archivoAutovectores.open(nombreCarpetaAutovectores);
 	archivoAutovalores.open(nombreCarpetaAutovalores);
 
 	// Cargo el archivo con los autovalores
-	for (int i = 0; i < dim; i++)
+	for (int i = 0; i < cantidad; i++)
 	{
 		archivoAutovalores << res.first[i] << endl;
 	}
 
 	// Cargo el archivo con los autovectores
+	// cantidad == cant_autovalores pedidos por parametro
+
 	for (int i = 0; i < dim; i++)
 	{
-		for (int j = 0; j < dim; j++)
+		for (int j = 0; j < cantidad; j++)
 		{
 			archivoAutovectores << res.second.coeff(i, j) << ' ';
 		}

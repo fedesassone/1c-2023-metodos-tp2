@@ -6,29 +6,30 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 
 pair<double, VectorXd> powerIteration(MatrixXd, int, double, int n);
-pair<VectorXd, MatrixXd> eigen(MatrixXd, int, double);
-VectorXd normalize(VectorXd v, int n);
-MatrixXd agregarVecAColumna(MatrixXd A, VectorXd v, int col, int n);
+pair<VectorXd, MatrixXd> eigen(MatrixXd, int, double, int);
+MatrixXd agregarVecAColumna(MatrixXd A, VectorXd v, int col, int n, int cant);
 
-pair<VectorXd, MatrixXd> eigen(MatrixXd A, int niter, double eps)
+pair<VectorXd, MatrixXd> eigen(MatrixXd A, int niter, double eps, int cant)
 {
     int n = A.cols();
-    VectorXd eigenvalues(n);
-    MatrixXd AV(n, n);
-    pair<double, VectorXd> temp;
 
-    for (int i = 0; i < n; i++)
+    VectorXd eigenvalues(cant);
+    MatrixXd AV(n, cant);
+    pair<double, VectorXd> temp;
+    
+
+    for (int i = 0; i < cant; i++)
     {
         cout << "autovalor: " << i << endl;
 
         temp = powerIteration(A, niter, eps, n);
 
         eigenvalues[i] = temp.first;
-        AV = agregarVecAColumna(AV, temp.second, i, n);
+        AV = agregarVecAColumna(AV, temp.second, i, n, cant);
         A -= temp.first * (temp.second * temp.second.transpose());
 
         cout << "valor = " << temp.first << endl;
-        cout << "======================" << endl;
+        cout << "=======================" << endl;
 
     }
     pair<VectorXd, MatrixXd> res = make_pair(eigenvalues, AV);
@@ -64,24 +65,7 @@ pair<double, VectorXd> powerIteration(MatrixXd A, int niter, double eps, int n)
     return make_pair(eigenvalue, b);
 }
 
-
-// VectorXd normalize(VectorXd v, int n)
-// {
-//     double sum = 0.00;
-//     for (int i = 0; i < n; i++)
-//     {
-//         sum += double(v[i] * v[i]);
-//     }
-//     sum = double(sqrt(sum));
-
-//     for (int j = 0; j < n; j++)
-//     {
-//         v[j] /= sum;
-//     }
-//     return v;
-// }
-
-MatrixXd agregarVecAColumna(MatrixXd A, VectorXd v, int col, int n)
+MatrixXd agregarVecAColumna(MatrixXd A, VectorXd v, int col, int n, int cant)
 {
     // Agrega el vector v a la columna i de la matriz A
     for (int i = 0; i < n; i++)
