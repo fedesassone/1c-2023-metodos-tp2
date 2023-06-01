@@ -3,5 +3,6 @@
         "iostream": "cpp",
         "iosfwd": "cpp",
         "ostream": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/home/julian/Documents/UBA/Metodos Numericos/repos_tps/1c-2023-metodos-tp2/src/eigen"
 }
