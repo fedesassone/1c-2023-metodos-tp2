@@ -41,3 +41,8 @@ sh compile
 tests/prueba.txt_autovalores.out
 tests/prueba.txt_autovectores.out
 ```
+
+
+DUDAS:
+
+- Eigenfaces de 2DPCA?
