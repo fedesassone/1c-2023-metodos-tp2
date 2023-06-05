@@ -1,0 +1,13 @@
+Para esta experimentacion, es importante aclarar lo siguiente:
+Para el metodo de PCA, utilizamos un rango de 1 a 408 (inclusive) componentes, dejando afuera a las componentes 409 en adelante, que vimos que perjudicaban los resultados considerablemente.
+Para el metodo de 2DPCA, utilizamos un rango completo de 1 a 46 (inclusive) componentes.
+
+===================================================
+Calculamos el promedio de similitud (correlacion) entre dos imagenes de distintas personas con todas las k componentes posibles para cada metodo.
+En el grafico de PCA, podemos ver que los primeros valores discrepan apenas del resto, pero esto creemos que es por la poca cantidad de componentes utilizada. A partir de 10 componentes, la tendencia que se ve es acercarse al 0, que tiene sentido ya que deberia haber nula o casi nula correlacion entre dos personas distintas. 
+Para el grafico de 2DPCA, podemos observar algo parecido para las primeras componentes (valores disparejos), y a partir de la cuarta componente vemos una funcion creciente y uniforme acercandose al 0, con valores muy parecidos a los del metodo de PCA.
+
+===================================================
+Tambien calculamos el promedio de similitud entre dos imagenes de una misma persona para diferentes k componentes.
+
+Para ambos graficos, observamos el mismo comportamiento para las primeras componentes, pero luego ambos graficos empiezan a decrecer uniformemente, esto puede parecer raro ya que la intuicion es que la similitud entre imagenes de una misma persona sea cercana al 1, pero este resultado se debe a que con menos componentes utilizadas, es mas dificil diferenciar dos imagenes, por lo que las que pertenecen a una misma persona se parecen mas (pero tambien disminuyen su calidad). De todas formas, con un numero acorde de componentes utilizadas para cada metodo, segun nuestros anteriores resultados (k = 46 para 2DPCA, k = 408 para PCA), la correlacion promedio se mantiene por encima del 0.5, con lo cual sigue indicando similitud entre imagenes de una misma persona.
